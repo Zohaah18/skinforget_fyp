@@ -1,0 +1,8 @@
+data_root: "C:/Users/LAPTOOL TECHNOLOGY/Downloads/HAM10000"
+splits_dir: "data/splits"
+seed: 42
+test_folds: 5
+val_folds: 8
+image_size: 224
+batch_size: 32
+num_workers: 0
