@@ -48,20 +48,26 @@ def class_weights(labels):
 
 
 def balanced_sampler(labels):
-    counts = torch.bincount(torch.tensor(labels), minlength=len(CLASSES)).float()
-    sample_w = (1.0 / counts)[torch.tensor(labels)]
+    labels_t = torch.tensor(labels)
+    counts = torch.bincount(labels_t, minlength=len(CLASSES)).float().clamp(min=1)
+    sample_w = (1.0 / counts)[labels_t]
     return WeightedRandomSampler(sample_w, num_samples=len(labels), replacement=True)
 
 
 def get_loaders(cfg):
     d, root = cfg["splits_dir"], cfg["data_root"]
     sz = cfg["image_size"]
-    train_ds = HAMDataset(f"{d}/train.csv", root, get_transforms(True, sz))
+    aug = cfg.get("use_augmentation", False)
+    train_ds = HAMDataset(f"{d}/train.csv", root, get_transforms(aug, sz))
     val_ds = HAMDataset(f"{d}/val.csv", root, get_transforms(False, sz))
     test_ds = HAMDataset(f"{d}/test.csv", root, get_transforms(False, sz))
 
-    kw = dict(batch_size=cfg["batch_size"], num_workers=cfg["num_workers"])
-    train_dl = DataLoader(train_ds, sampler=balanced_sampler(train_ds.labels), **kw)
+    kw = dict(batch_size=cfg["batch_size"], num_workers=cfg["num_workers"],
+              pin_memory=torch.cuda.is_available())
+    if cfg.get("use_balanced_sampler", False):
+        train_dl = DataLoader(train_ds, sampler=balanced_sampler(train_ds.labels), **kw)
+    else:
+        train_dl = DataLoader(train_ds, shuffle=True, **kw)
     val_dl = DataLoader(val_ds, shuffle=False, **kw)
     test_dl = DataLoader(test_ds, shuffle=False, **kw)
     return train_dl, val_dl, test_dl, train_ds

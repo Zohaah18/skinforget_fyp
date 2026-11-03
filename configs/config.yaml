@@ -6,3 +6,26 @@ val_folds: 8
 image_size: 224
 batch_size: 32
 num_workers: 0
+
+# ---- training recipe (paper preset = all false) ----
+use_balanced_sampler: false
+use_class_weights: false
+use_augmentation: false
+use_amp: true
+out_dir: "outputs"
+
+# ---- base-paper unlearning hyperparameters ----
+noise_steps: 50
+noise_lr: 0.1            # alpha
+noise_lambda: 0.001      # lambda
+noise_init_std: 1.0
+max_noise_batches: null  # null = one noisy sample per forget image
+impair_epochs: 1
+impair_optim: "sgd"      # sgd | adam
+impair_lr: 0.1           # beta
+impair_momentum: 0.0
+retain_fraction: 0.1
+repair_epochs: 1
+repair_optim: "adam"
+repair_lr: 0.0001
+repair_balanced: true
