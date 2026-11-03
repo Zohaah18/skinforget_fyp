@@ -16,7 +16,7 @@ from sklearn.metrics import (balanced_accuracy_score, classification_report,
 from torchvision import models
 
 from dataset import get_loaders, class_weights, CLASSES
-
+from config_loader import load_cfg
 
 def set_seed(s):
     random.seed(s)
@@ -58,7 +58,7 @@ def main():
     ap.add_argument("--out", default="checkpoints/baseline.pth")
     args = ap.parse_args()
 
-    cfg = yaml.safe_load(open("configs/config.yaml"))
+    cfg = load_cfg()
     set_seed(cfg["seed"])
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Device:", device)

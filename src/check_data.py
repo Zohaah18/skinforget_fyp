@@ -2,9 +2,9 @@ import yaml
 import torch
 from torchvision.utils import save_image
 from dataset import get_loaders, class_weights, CLASSES, MEAN, STD
-
+from config_loader import load_cfg
 if __name__ == "__main__":
-    cfg = yaml.safe_load(open("configs/config.yaml"))
+    cfg = load_cfg()
     train_dl, val_dl, test_dl, train_ds = get_loaders(cfg)
 
     imgs, labels = next(iter(train_dl))
