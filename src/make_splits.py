@@ -2,8 +2,8 @@ from pathlib import Path
 import pandas as pd
 import yaml
 from sklearn.model_selection import StratifiedGroupKFold
-
-cfg = yaml.safe_load(open("configs/config.yaml"))
+from config_loader import load_cfg
+cfg = load_cfg()
 root = Path(cfg["data_root"])
 out = Path(cfg["splits_dir"])
 out.mkdir(parents=True, exist_ok=True)

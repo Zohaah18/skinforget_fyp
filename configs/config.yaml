@@ -1,4 +1,4 @@
-data_root: "C:/Users/LAPTOOL TECHNOLOGY/Downloads/HAM10000"
+data_root: "data/HAM10000"
 splits_dir: "data/splits"
 seed: 42
 test_folds: 5

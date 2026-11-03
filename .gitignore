@@ -1,5 +1,15 @@
 .venv/
 __pycache__/
-data/sample_batch.png
+.ipynb_checkpoints/
 *.pth
+*.pt
+*.ckpt
+*.npy
+*.npz
+*.zip
 results/
+checkpoints/
+mlruns/
+data/sample_batch.png
+data/HAM10000/
+configs/local.yaml
