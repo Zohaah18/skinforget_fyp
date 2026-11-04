@@ -1,0 +1,20 @@
+{
+  "accuracy": 0.8143712574850299,
+  "macro_f1": 0.6032631321896941,
+  "balanced_accuracy": 0.5782400011558678,
+  "per_class_recall": {
+    "akiec": 0.4696969696969697,
+    "bcc": 0.7864077669902912,
+    "bkl": 0.7181818181818181,
+    "df": 0.21739130434782608,
+    "mel": 0.28378378378378377,
+    "nv": 0.9515287099179717,
+    "vasc": 0.6206896551724138
+  },
+  "seed": 42,
+  "recipe": {
+    "use_balanced_sampler": false,
+    "use_class_weights": false,
+    "use_augmentation": false
+  }
+}
