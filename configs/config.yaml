@@ -29,4 +29,4 @@ repair_epochs: 1
 repair_optim: "adam"
 repair_lr: 0.0001
 repair_balanced: true
-noise_amp: false
+noise_amp: true
