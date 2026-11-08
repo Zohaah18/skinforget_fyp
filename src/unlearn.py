@@ -52,6 +52,8 @@ def make_noise_bank(model, forget_ds, cfg, device, seed):
     model.eval()
     for p in model.parameters():
         p.requires_grad_(False)
+    use_amp = bool(cfg.get("noise_amp", False)) and device == "cuda"
+    scale = 1024.0 if use_amp else 1.0   # Adam ignores gradient scale; this only avoids fp16 underflow
     g = torch.Generator().manual_seed(seed)
     dl = DataLoader(forget_ds, batch_size=cfg["batch_size"], shuffle=True,
                     num_workers=cfg["num_workers"], generator=g)
@@ -65,17 +67,20 @@ def make_noise_bank(model, forget_ds, cfg, device, seed):
         opt = torch.optim.Adam([N], lr=cfg["noise_lr"])
         for _ in range(cfg["noise_steps"]):
             opt.zero_grad(set_to_none=True)
-            ce = F.cross_entropy(model(x + N), y)
+            with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=use_amp):
+                out = model(x + N)
+            ce = F.cross_entropy(out.float(), y)
             reg = N.flatten(1).pow(2).sum(1).mean()
             loss = -ce + cfg["noise_lambda"] * reg
-            loss.backward()
+            (loss * scale).backward()
+            if not torch.isfinite(N.grad).all():   # skip the rare fp16 overflow step
+                continue
             opt.step()
         xs.append((x + N).detach().half().cpu())
         ys.append(y.cpu())
     for p in model.parameters():
         p.requires_grad_(True)
     return torch.cat(xs), torch.cat(ys)
-
 
 # ------------------------------------------------------------ train epoch
 def make_opt(name, params, lr, momentum=0.0):
