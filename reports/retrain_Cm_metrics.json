@@ -1,0 +1,25 @@
+{
+  "accuracy": 0.24201596806387227,
+  "macro_f1": 0.36139609978584103,
+  "balanced_accuracy": 0.5619666369502616,
+  "acc_retain": 0.7315233785822021,
+  "macro_f1_retain": 0.6767782144067724,
+  "per_class_recall": {
+    "akiec": 0.45454545454545453,
+    "bcc": 0.7864077669902912,
+    "bkl": 0.759090909090909,
+    "df": 0.34782608695652173,
+    "mel": 0.7927927927927928,
+    "nv": 0.0,
+    "vasc": 0.7931034482758621
+  },
+  "train_time_s": 322.2741930484772,
+  "epochs_run": 11,
+  "seed": 42,
+  "forget": "Cm",
+  "recipe": {
+    "use_balanced_sampler": false,
+    "use_class_weights": false,
+    "use_augmentation": false
+  }
+}
