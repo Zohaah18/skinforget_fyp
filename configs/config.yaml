@@ -28,5 +28,5 @@ retain_fraction: 0.1
 repair_epochs: 1
 repair_optim: "adam"
 repair_lr: 0.0001
-repair_balanced: true
+repair_balanced: false
 noise_amp: true
