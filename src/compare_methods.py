@@ -1,5 +1,7 @@
-"""Compare baseline / control / fine-tune-only / retrain on the test set (gold = retrain)."""
+"""Compare baseline / control / fine-tune-only / retrain (+ best adaptive families) on the test set.
+Gold standard = retrain-from-scratch."""
 import argparse
+import json
 from pathlib import Path
 
 import numpy as np
@@ -35,8 +37,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--baseline", required=True)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--control_suffix", default="", help="e.g. _amp")
+    ap.add_argument("--control_suffix", default="", help="suffix of the control run, e.g. '' or _amp")
     ap.add_argument("--forget", nargs="+", default=["C1", "C2", "C4", "Cm"], choices=list(FORGET_SETS))
+    ap.add_argument("--best_json", default=None, help="adaptive_best.json: adds one method per family")
+    ap.add_argument("--out_name", default="comparison", help="output file stem")
     args = ap.parse_args()
 
     cfg = load_cfg()
@@ -47,6 +51,7 @@ def main():
     test_ds = HAMDataset(f"{d}/test.csv", cfg["data_root"], get_transforms(False, sz))
     dl = DataLoader(test_ds, batch_size=cfg["batch_size"], shuffle=False,
                     num_workers=cfg["num_workers"])
+    best = json.load(open(args.best_json)) if args.best_json else {}
 
     rows, recall_rows = [], []
     for tag in args.forget:
@@ -58,6 +63,9 @@ def main():
             "finetune_only": out / "references" / f"finetune_{tag}_seed{args.seed}" / "final.pt",
             "retrain": out / "references" / f"retrain_{tag}" / "best.pt",
         }
+        for fam, per_tag in best.items():
+            if tag in per_tag:
+                paths[fam] = out / "unlearning" / f"resnet50_{tag}_seed{args.seed}{per_tag[tag]}" / "final.pt"
         probs, y = {}, None
         for name, pth in paths.items():
             if not Path(pth).exists():
@@ -88,11 +96,11 @@ def main():
 
     df = pd.DataFrame(rows).round(4)
     rec = pd.DataFrame(recall_rows).round(3)
-    df.to_csv(out / "comparison.csv", index=False)
-    rec.to_csv(out / "comparison_recall.csv", index=False)
+    df.to_csv(out / f"{args.out_name}.csv", index=False)
+    rec.to_csv(out / f"{args.out_name}_recall.csv", index=False)
     print(df.to_string(index=False))
     print(rec.to_string(index=False))
-    print("Saved comparison.csv and comparison_recall.csv to", out)
+    print(f"Saved {args.out_name}.csv and {args.out_name}_recall.csv to", out)
 
 
 if __name__ == "__main__":
