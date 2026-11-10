@@ -9,7 +9,7 @@ from config_loader import load_cfg
 cfg = load_cfg()
 out = Path(cfg.get("out_dir", "outputs"))
 df = pd.read_csv(out / "results_adaptive.csv").drop_duplicates("run_id", keep="last")
-df = df[~df.run_id.str.contains("smoke")]
+df = df[df.run_id.str.contains("_seed0")]   # model selection uses seed 0 only
 order = {"C1": 0, "C2": 1, "C4": 2, "Cm": 3}
 
 # ---- full grid, per forget set: validation J for each (gamma, kappa)
