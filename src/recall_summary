@@ -1,0 +1,44 @@
+"""Per-class TEST recall, mean +/- std over unlearning seeds, read from each run's metrics.json."""
+import json
+import re
+from pathlib import Path
+
+import pandas as pd
+
+from config_loader import load_cfg
+
+CLASSES = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
+cfg = load_cfg()
+out = Path(cfg.get("out_dir", "outputs"))
+rows = []
+for f in sorted((out / "unlearning").glob("*/metrics.json")):
+    m = json.load(open(f))
+    run_id = m.get("run_id", f.parent.name)
+    if "smoke" in run_id:
+        continue
+    rec = m["test"]["final"]["recall"] if "test" in m else m.get("recovered", {}).get("recall")
+    mt = re.match(r"resnet50_([A-Za-z0-9]+)_seed(\d+)(.*)", run_id)
+    if rec is None or not mt:
+        continue
+    tag, seed, suf = mt.group(1), int(mt.group(2)), mt.group(3)
+    rows.append({"tag": tag, "config": suf or "_control_v2", "seed": seed, **rec})
+df = pd.DataFrame(rows)
+
+order = {"C1": 0, "C2": 1, "C4": 2, "Cm": 3}
+base = json.load(open(out / "baseline" / "metrics.json"))["per_class_recall"]
+for tag in sorted(df.tag.unique(), key=lambda t: order.get(t, 9)):
+    lines = [{"config": "baseline", "n": 1, **{c: f"{base[c]:.3f}" for c in CLASSES}}]
+    rt = out / "references" / f"retrain_{tag}" / "metrics.json"
+    if rt.exists():
+        r = json.load(open(rt))["per_class_recall"]
+        lines.append({"config": "RETRAIN(gold)", "n": 1, **{c: f"{r[c]:.3f}" for c in CLASSES}})
+    for cfg_name, g in df[df.tag == tag].groupby("config"):
+        d = {"config": cfg_name, "n": len(g)}
+        for c in CLASSES:
+            m_, s_ = g[c].mean(), g[c].std(ddof=1) if len(g) > 1 else None
+            d[c] = f"{m_:.3f}" + (f"±{s_:.3f}" if s_ is not None else "")
+        lines.append(d)
+    print(f"\n=== {tag}: per-class test recall ===")
+    print(pd.DataFrame(lines).to_string(index=False))
+    pd.DataFrame(lines).to_csv(out / f"recall_summary_{tag}.csv", index=False)
+print("\nSaved recall_summary_<tag>.csv to", out)
